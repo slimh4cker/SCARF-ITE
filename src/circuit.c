@@ -57,7 +57,7 @@ void abrirPuerta() {
 void errorAcceso() {
   Serial.println("Acceso denegado!");
   for (int i = 0; i < 3; i++) { // Hace 3 pitidos
-    sonar_buzzer(200);
+    sonar_buzzer(600);
   }
 }
 
