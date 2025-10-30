@@ -12,3 +12,6 @@ def conectar():
         collation="utf8mb4_general_ci"
 
     )
+
+#Ruta donde se alojan las fotos en la Raspberry Pi
+RUTA_FOTOS = "/srv/dev-disk-by-uuid-d0b97ed4-2c72-469f-926a-a8b480f908bc/scarf-ite"
