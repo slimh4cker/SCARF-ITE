@@ -25,70 +25,50 @@ def guardar_embedding(nombre, embedding):
     print(f" Usuario '{nombre}' registrado correctamente.")
 
 def registrar_usuario():
-    """
-    Recorre todas las carpetas dentro de RUTA_FOTOS.
-    Cada carpeta representa a una persona y contiene imágenes de su rostro.
-    Se genera un embedding promedio por persona y se guarda en la base de datos.
-    """
+    
 
-    if not os.path.exists(IMAGE_PATH):
-        print(f" La ruta {RUTA_FOTOS} no existe.")
-        return
+    carpetas = [d for d in os.listdir(IMAGE_PATH) if os.path.isdir(os.path.join(IMAGE_PATH, d))]
+    print(f"Se encontraron {len(carpetas)} carpetas para procesar.\n")
 
-    carpetas_personas = [
-        os.path.join(IMAGE_PATH, carpeta)
-        for carpeta in os.listdir(IMAGE_PATH)
-        if os.path.isdir(os.path.join(IMAGE_PATH, carpeta))
-    ]
+    for persona in carpetas:
+        ruta_persona = os.path.join(IMAGE_PATH, persona)
+        print(f"Procesando a {persona}...")
 
-    if not carpetas_personas:
-        print(f"No se encontraron carpetas dentro de {IMAGE_PATH}.")
-        return
+        for archivo in os.listdir(ruta_persona):
+            if archivo.lower().endswith((".jpg", ".png", ".jpeg")):
+                ruta_imagen = os.path.join(ruta_persona, archivo)
 
-    print(f"Se encontraron {len(carpetas_personas)} carpetas para procesar.\n")
-
-    # Procesar cada persona
-    for carpeta_persona in carpetas_personas:
-        nombre_persona = os.path.basename(carpeta_persona)
-        print(f"Procesando a {nombre_persona}...")
-
-        embeddings_persona = []
-
-        for archivo in os.listdir(carpeta_persona):
-            if not archivo.lower().endswith((".jpg", ".png")):
-                continue
-
-            ruta_imagen = os.path.join(carpeta_persona, archivo)
-            try:
+                # Cargar imagen y convertir a RGB
                 imagen = face_recognition.load_image_file(ruta_imagen)
-                imagen = imagen[:, :, ::-1]
-                faces = face_recognition.face_locations(imagen)
-                print(f"{faces}")
-                print(imagen.shape)
+                imagen_rgb = imagen[:, :, ::-1]  # Asegura formato RGB
 
-                if len(faces) == 0:
+                # Reducir tamaño si es muy grande (mejor rendimiento)
+                if imagen_rgb.shape[0] > 1000:
+                    imagen_rgb = cv2.resize(imagen_rgb, (0, 0), fx=0.5, fy=0.5)
+
+                # Intentar detección con CNN (más preciso)
+                try:
+                    faces = face_recognition.face_locations(imagen_rgb, model="cnn")
+                except Exception as e:
+                    print(f"Error usando modelo CNN ({e}), probando con HOG...")
+                    faces = face_recognition.face_locations(imagen_rgb, model="hog")
+
+                print(f"Detecciones: {faces}")
+
+                if not faces:
                     print(f"No se detectó rostro en {archivo}.")
                     continue
 
-                encodings = face_recognition.face_encodings(imagen, faces)
+                # Obtener encodings y promediar
+                encodings = face_recognition.face_encodings(imagen_rgb, faces)
+                if encodings:
+                    promedio = np.mean(np.array(encodings), axis=0)
+                    print(f"Rostro detectado en {archivo}. Guardando embedding...")
+                    guardar_embedding(persona, promedio)
+                else:
+                    print(f"No se pudo generar encoding para {archivo}.")
 
-                # Guardamos todos los encodings (una imagen puede tener más de un rostro)
-                embeddings_persona.extend(encodings)
-
-            except Exception as e:
-                print(f" Error procesando {archivo}: {e}")
-
-        if not embeddings_persona:
-            print(f"No se obtuvieron embeddings para {nombre_persona}. Se omite.\n")
-            continue
-
-        # Calcular embedding promedio de todas las imágenes de la persona
-        embedding_promedio = np.mean(np.array(embeddings_persona), axis=0)
-        guardar_embedding(nombre_persona, embedding_promedio)
-
-        print(f" Embedding guardado para {nombre_persona}.\n")
-
-    print("Registro completo finalizado.\n")
+    print("\nRegistro desde carpetas completado.")
 
 if __name__ == "__main__":
     registrar_usuario()
