@@ -1,4 +1,3 @@
-
 # Código de registro de usuarios 
 import cv2
 # registrar.py
@@ -62,7 +61,10 @@ def registrar_usuario():
             ruta_imagen = os.path.join(carpeta_persona, archivo)
             try:
                 imagen = face_recognition.load_image_file(ruta_imagen)
+                imagen = imagen[:, :, ::-1]
                 faces = face_recognition.face_locations(imagen)
+                print(f"{faces}")
+                print(imagen.shape)
 
                 if len(faces) == 0:
                     print(f"No se detectó rostro en {archivo}.")
@@ -90,5 +92,3 @@ def registrar_usuario():
 
 if __name__ == "__main__":
     registrar_usuario()
-
-
