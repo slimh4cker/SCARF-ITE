@@ -1,17 +1,29 @@
  # Configuración de la base de datos
 # config.py
 import mysql.connector
+from dotenv import load_dotenv
+import os
+
+
+
+load_dotenv()
+
+HOST = os.getenv('DB_HOST')
+USER = os.getenv('DB_USER')
+PASSWORD = os.getenv('DB_PASS')
+DATABASE = os.getenv('DB_NAME')
+CHARSET = os.getenv('CHARSET')
+COLLATION = os.getenv('COLLATION')
+
+
 
 def conectar():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="ncontradeMariaDB25!",     # tu contraseña si tiene
-        database="reconocimiento",
-        charset="utf8mb4",  # Solo utf8mb4, sin _0900_ai_ci
-        collation="utf8mb4_general_ci"
+        host=HOST,
+        user=USER,
+        password=PASSWORD,
+        database=DATABASE,
+        charset=CHARSET,
+        collation=COLLATION
 
-    )
-
-#Ruta donde se alojan las fotos en la Raspberry Pi
-RUTA_FOTOS = "/srv/dev-disk-by-uuid-d0b97ed4-2c72-469f-926a-a8b480f908bc/scarf-ite"
+)
