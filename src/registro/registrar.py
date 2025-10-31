@@ -25,50 +25,62 @@ def guardar_embedding(nombre, embedding):
     print(f" Usuario '{nombre}' registrado correctamente.")
 
 def registrar_usuario():
-    
+
+    # Cargar clasificador Haar para detección de rostros
+    haar_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    detector_rostros = cv2.CascadeClassifier(haar_path)
 
     carpetas = [d for d in os.listdir(IMAGE_PATH) if os.path.isdir(os.path.join(IMAGE_PATH, d))]
-    print(f"Se encontraron {len(carpetas)} carpetas para procesar.\n")
+    print(f"📁 Se encontraron {len(carpetas)} carpetas para procesar.\n")
 
     for persona in carpetas:
         ruta_persona = os.path.join(IMAGE_PATH, persona)
-        print(f"Procesando a {persona}...")
+        print(f"\n👤 Procesando a {persona}...")
 
         for archivo in os.listdir(ruta_persona):
-            if archivo.lower().endswith((".jpg", ".png", ".jpeg")):
+            if archivo.lower().endswith((".jpg", ".jpeg", ".png")):
                 ruta_imagen = os.path.join(ruta_persona, archivo)
+                print(f"→ Analizando {archivo}...")
 
-                # Cargar imagen y convertir a RGB
-                imagen = face_recognition.load_image_file(ruta_imagen)
-                imagen_rgb = imagen[:, :, ::-1]  # Asegura formato RGB
-
-                # Reducir tamaño si es muy grande (mejor rendimiento)
-                if imagen_rgb.shape[0] > 1000:
-                    imagen_rgb = cv2.resize(imagen_rgb, (0, 0), fx=0.5, fy=0.5)
-
-                # Intentar detección con CNN (más preciso)
-                try:
-                    faces = face_recognition.face_locations(imagen_rgb, model="cnn")
-                except Exception as e:
-                    print(f"Error usando modelo CNN ({e}), probando con HOG...")
-                    faces = face_recognition.face_locations(imagen_rgb, model="hog")
-
-                print(f"Detecciones: {faces}")
-
-                if not faces:
-                    print(f"No se detectó rostro en {archivo}.")
+                imagen = cv2.imread(ruta_imagen)
+                if imagen is None:
+                    print(f"[⚠️] No se pudo leer {archivo}")
                     continue
 
-                # Obtener encodings y promediar
-                encodings = face_recognition.face_encodings(imagen_rgb, faces)
-                if encodings:
-                    promedio = np.mean(np.array(encodings), axis=0)
-                    print(f"Rostro detectado en {archivo}. Guardando embedding...")
-                    guardar_embedding(persona, promedio)
-                else:
-                    print(f"No se pudo generar encoding para {archivo}.")
+                # Reducción de tamaño (reduce carga en la Raspberry)
+                escala = 0.5
+                imagen = cv2.resize(imagen, (0, 0), fx=escala, fy=escala)
 
-    print("\nRegistro desde carpetas completado.")
+                # Convertir a escala de grises para detección rápida
+                gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+
+                # Detección con HaarCascade
+                rostros = detector_rostros.detectMultiScale(
+                    gris,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(80, 80)  # tamaño mínimo de rostro
+                )
+
+                if len(rostros) == 0:
+                    print(f"[❌] No se detectó rostro en {archivo}.")
+                    continue
+
+                for (x, y, w, h) in rostros:
+                    # Recortar rostro y convertir a RGB
+                    rostro = imagen[y:y+h, x:x+w]
+                    rostro_rgb = cv2.cvtColor(rostro, cv2.COLOR_BGR2RGB)
+
+                    # Obtener encoding con face_recognition
+                    encodings = face_recognition.face_encodings(rostro_rgb)
+                    if encodings:
+                        promedio = np.mean(np.array(encodings), axis=0)
+                        print(f"[✔] Rostro detectado en {archivo}. Guardando embedding...")
+                        guardar_embedding(persona, promedio)
+                    else:
+                        print(f"[⚠️] No se pudo generar encoding para {archivo}.")
+
+    print("\n✅ Registro desde carpetas completado con HaarCascade + FaceRecognition.")
 
 if __name__ == "__main__":
     registrar_usuario()
