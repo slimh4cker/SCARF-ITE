@@ -104,6 +104,3 @@ def registrar_usuario():
 
 if __name__ == "__main__":
     registrar_usuario()
-
-if __name__ == "__main__":
-    registrar_usuario()
