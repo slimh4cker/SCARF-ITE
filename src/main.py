@@ -1,5 +1,6 @@
 from registro.registrar import registrar_usuario
-from reconocimiento.reconocimiento import reconocer
+#from reconocimiento.reconocimiento import reconocer
+from reconocimiento.rec import reconocer
 
 def main():
     while True:
