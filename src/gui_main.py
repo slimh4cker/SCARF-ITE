@@ -1,7 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
 from registro.registrar import registrar_usuario
-from reconocimiento.rec import reconocer
+
+#ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
+from reconocimiento.reconocimiento import reconocer
+
+#ESTA ES LA QUE SE USA PARA LA CAMARA DE ANDRES
+#from reconocimiento.rec import reconocer
 
 # --- Colores y estilo ---
 COLOR_FONDO = "#1A1A2E"
