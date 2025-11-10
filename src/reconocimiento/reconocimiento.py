@@ -118,10 +118,10 @@ def reconocer():
     print(f"[ℹ] Se cargaron {len(usuarios)} usuarios desde la base de datos.")
 
     # Si quieres usar la webcam, comenta la linea RTSP y descomenta la de abajo
-    # cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
 
     # Camara IP (usa el canal /12 si /11 va muy lento)
-    cap = cv2.VideoCapture("rtsp://mffe:mn333w@140.10.2.9:554/11")
+    #cap = cv2.VideoCapture("rtsp://mffe:mn333w@140.10.2.9:554/11")
 
     # Configuracion para mejorar rendimiento y calidad
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
