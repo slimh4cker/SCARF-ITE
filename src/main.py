@@ -1,4 +1,9 @@
-from registro.registrar import registrar_usuario
+#ESTA OPCION SE UTILIZA YA PARA EL PROYECTO (YA PARA LA CAMARA EXTERNA) 
+#from registro.registrar import registrar_usuario
+
+#ESTA SE UTILIZA PARA HACER PRUEBAS CON EL REGISTRO
+from registro.reg import registrar_usuario
+
 
 #ESTA SE UTILIZA PARA HACER PRUEBAS CON LA CAMARA DE LA LAPTOP
 from reconocimiento.reconocimiento import reconocer
