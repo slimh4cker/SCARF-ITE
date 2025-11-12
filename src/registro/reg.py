@@ -52,6 +52,6 @@ def registrar_usuario():
 
     if len(muestras) > 0:
         promedio = np.mean(np.array(muestras), axis=0)
-        guardar_embedding(nombre, promedio)
+        guardar_embedding(nombre.lower(), promedio)
     else:
         print("No se registraron muestras.")
