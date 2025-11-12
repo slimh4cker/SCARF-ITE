@@ -3,34 +3,36 @@ from tkinter import messagebox
 import customtkinter as ctk
 from registro.registrar import registrar_usuario
 
-# ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
+
+#ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
 from reconocimiento.reconocimiento import reconocer
 
-# ESTA ES LA QUE SE USA PARA LA CAMARA DE ANDRES
-# from reconocimiento.rec import reconocer
+#ESTA ES LA QUE SE USA PARA LA CAMARA DE ANDRES
+#from reconocimiento.rec import reconocer
 
-# --- Configuración global ---
+# Configuración global
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-COLOR_FONDO_IZQ = "#6DA9E4"
-COLOR_FONDO_DER = "#F5F7FA"
+COLOR_NAVBAR = "#6DA9E4"
+COLOR_FONDO = "#F5F7FA"
 COLOR_BOTON = "#3A6D8C"
 COLOR_BOTON_HOVER = "#2E4F6E"
 COLOR_TEXTO = "#1A1A1A"
 
 # ---------------------------------------------------------------------
 # Ventana principal
+# ---------------------------------------------------------------------
 class SCARFApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("SCARF ITE - Reconocimiento Facial")
-        self.geometry("800x480")
+        self.geometry("900x500")
         self.resizable(False, False)
-        self.configure(fg_color=COLOR_FONDO_DER)
+        self.configure(fg_color=COLOR_FONDO)
 
-        # Contenedor principal (para cambiar entre vistas)
-        self.container = ctk.CTkFrame(self, fg_color=COLOR_FONDO_DER)
+        # Contenedor principal
+        self.container = ctk.CTkFrame(self, fg_color=COLOR_FONDO)
         self.container.pack(fill="both", expand=True)
 
         self.mostrar_pantalla_inicio()
@@ -42,60 +44,74 @@ class SCARFApp(ctk.CTk):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-        # Panel izquierdo decorativo
-        panel_izq = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO_IZQ, width=270)
-        panel_izq.pack(side="left", fill="y")
+        # ---------------- NAVBAR SUPERIOR ----------------
+        navbar = ctk.CTkFrame(self.container, fg_color=COLOR_NAVBAR, height=70)
+        navbar.pack(side="top", fill="x")
 
-        # Centrar verticalmente el contenido
-        cont_izq = ctk.CTkFrame(panel_izq, fg_color=COLOR_FONDO_IZQ)
-        cont_izq.place(relx=0.5, rely=0.5, anchor="center")
-
+        # Icono izquierda
         logo = ctk.CTkLabel(
-            cont_izq,
+            navbar,
             text="🔍",
             text_color="white",
-            font=("Segoe UI Emoji", 70, "bold")
+            font=("Segoe UI Emoji", 32, "bold")
         )
-        logo.pack(pady=(0, 10))
+        logo.place(x=20, rely=0.5, anchor="w")
 
-        texto_logo = ctk.CTkLabel(
-            cont_izq,
-            text="SCARF ITE",
+        # Texto SCARF ITE a la derecha del ícono
+        titulo_izq = ctk.CTkLabel(
+            navbar,
+            text="SCARF - ITE",
             text_color="white",
-            font=("Segoe UI", 24, "bold")
+            font=("Segoe UI", 20, "bold")
         )
-        texto_logo.pack()
+        titulo_izq.place(x=80, rely=0.5, anchor="w")
 
-        texto_desc = ctk.CTkLabel(
-            cont_izq,
-            text="Sistema de Control Automático\npor Reconocimiento Facial",
+        # Texto centrado
+        titulo_centro = ctk.CTkLabel(
+            navbar,
+            text="Sistema de Control Automático por Reconocimiento Facial",
             text_color="white",
-            font=("Segoe UI", 11, "bold"),
-            justify="center"
+            font=("Segoe UI", 13, "bold")
         )
-        texto_desc.pack(pady=10)
+        titulo_centro.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Panel derecho principal
-        panel_der = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO_DER)
-        panel_der.pack(side="right", fill="both", expand=True, padx=20, pady=20)
+        # ---------------- PANEL INFERIOR (contenido) ----------------
+        panel_contenido = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO)
+        panel_contenido.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Espacio vacío para la cámara (a la izquierda, más grande)
+        espacio_camara = ctk.CTkFrame(panel_contenido, fg_color="#E8EDF2", corner_radius=10, width=400, height=360)
+        espacio_camara.pack(side="left", fill="y", padx=(20, 0), pady=10)
+
+        placeholder = ctk.CTkLabel(
+            espacio_camara,
+            text="(Vista de cámara aquí)",
+            text_color="#7B7B7B",
+            font=("Segoe UI", 12, "italic")
+        )
+        placeholder.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Panel derecho con botones (subido un poco)
+        panel_derecho = ctk.CTkFrame(panel_contenido, fg_color=COLOR_FONDO)
+        panel_derecho.pack(side="right", fill="both", expand=True, padx=(60, 20), pady=(0, 20))
 
         titulo = ctk.CTkLabel(
-            panel_der,
+            panel_derecho,
             text="Registro de Usuario",
             text_color=COLOR_TEXTO,
             font=("Segoe UI", 24, "bold")
         )
-        titulo.pack(pady=(40, 40))
+        titulo.pack(pady=(40, 30))  # <-- Subido (antes 60,40)
 
-        # Botones principales (más grandes y texto bold)
+        # Botones (igual estilo, texto en negritas)
         boton_registrar = ctk.CTkButton(
-            panel_der,
+            panel_derecho,
             text="Registrar Usuario",
             fg_color=COLOR_BOTON,
             hover_color=COLOR_BOTON_HOVER,
-            corner_radius=25,
-            width=240,
-            height=55,
+            corner_radius=20,
+            width=220,
+            height=50,
             font=("Segoe UI", 13, "bold"),
             text_color="white",
             command=lambda: messagebox.showinfo("Registro", "Funcionalidad aún no implementada.")
@@ -103,13 +119,13 @@ class SCARFApp(ctk.CTk):
         boton_registrar.pack(pady=10)
 
         boton_analytics = ctk.CTkButton(
-            panel_der,
+            panel_derecho,
             text="Ver Analytics",
             fg_color=COLOR_BOTON,
             hover_color=COLOR_BOTON_HOVER,
-            corner_radius=25,
-            width=240,
-            height=55,
+            corner_radius=20,
+            width=220,
+            height=50,
             font=("Segoe UI", 13, "bold"),
             text_color="white",
             command=self.mostrar_pantalla_analytics
@@ -117,13 +133,13 @@ class SCARFApp(ctk.CTk):
         boton_analytics.pack(pady=10)
 
         boton_salir = ctk.CTkButton(
-            panel_der,
+            panel_derecho,
             text="Salir",
             fg_color="#B03A3A",
             hover_color="#802828",
-            corner_radius=25,
-            width=240,
-            height=55,
+            corner_radius=20,
+            width=220,
+            height=50,
             font=("Segoe UI", 13, "bold"),
             text_color="white",
             command=self.destroy
@@ -131,7 +147,7 @@ class SCARFApp(ctk.CTk):
         boton_salir.pack(pady=10)
 
         footer = ctk.CTkLabel(
-            panel_der,
+            panel_derecho,
             text="Proyecto SCARF ITE © 2025",
             text_color="#7B7B7B",
             font=("Segoe UI", 9)
@@ -139,20 +155,15 @@ class SCARFApp(ctk.CTk):
         footer.pack(side="bottom", pady=10)
 
     # -----------------------------------------------------------------
-    # PANTALLA DE ANALYTICS
+    # PANTALLA ANALYTICS
     # -----------------------------------------------------------------
     def mostrar_pantalla_analytics(self):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-        panel = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO_DER)
+        panel = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO)
         panel.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Para evitar línea gris
-        panel.pack_propagate(False)
-        self.configure(bg=COLOR_FONDO_DER)
-
-        # Botón de volver
         boton_volver = ctk.CTkButton(
             panel,
             text="← Volver",
@@ -165,7 +176,6 @@ class SCARFApp(ctk.CTk):
         )
         boton_volver.pack(anchor="w", pady=(10, 0))
 
-        # Título
         titulo = ctk.CTkLabel(
             panel,
             text="Panel de Analíticas del Sistema",
@@ -174,8 +184,7 @@ class SCARFApp(ctk.CTk):
         )
         titulo.pack(pady=(10, 20))
 
-        # Métricas principales
-        frame_metricas = ctk.CTkFrame(panel, fg_color=COLOR_FONDO_DER)
+        frame_metricas = ctk.CTkFrame(panel, fg_color=COLOR_FONDO)
         frame_metricas.pack(pady=10)
 
         def crear_card(titulo, valor, color):
@@ -188,22 +197,18 @@ class SCARFApp(ctk.CTk):
         crear_card("Accesos Exitosos", 105, "#5E8AC7")
         crear_card("Accesos Fallidos", 15, "#E57373")
 
-        # Estadísticas
         frame_stats = ctk.CTkFrame(panel, fg_color="#E3ECF8", corner_radius=10)
         frame_stats.pack(pady=25, fill="x", padx=40)
 
         ctk.CTkLabel(frame_stats, text="📊 Estadísticas del Sistema", font=("Segoe UI", 14, "bold"), text_color=COLOR_TEXTO).pack(pady=(10, 10))
-
         ctk.CTkLabel(frame_stats, text="Tasa de Error:     12.5%", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
         ctk.CTkLabel(frame_stats, text="Precisión:          87.5%", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
         ctk.CTkLabel(frame_stats, text="Efectividad Global: Alta", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20, pady=(0, 10))
 
-        # Placeholder para gráfico futuro
         grafico = ctk.CTkFrame(panel, fg_color="#D0D8E8", corner_radius=10, height=120)
         grafico.pack(fill="x", padx=40, pady=20)
         ctk.CTkLabel(grafico, text="📈 (Aquí irá el gráfico de desempeño del sistema)", font=("Segoe UI", 11, "italic"), text_color="#555").pack(expand=True)
 
-        # Footer
         footer = ctk.CTkLabel(
             panel,
             text="Proyecto SCARF ITE © 2025",
