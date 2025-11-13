@@ -20,10 +20,13 @@ class Logs:
         los métodos de consulta correspondientes.
         """
         # Contadores locales (opcional, se pueden llenar desde la BD)
-        self.intentos_totales = 0      # Número total de intentos registrados
-        self.intentos_exitosos = 0     # Número de intentos exitosos (status_log = True/1)
-        self.intentos_fallidos = 0     # Número de intentos fallidos (status_log = False/0)
-        self.id_usuario = ""           # ID del usuario actual (se establece automáticamente)
+        self.__intentos_totales = 0      # Número total de intentos registrados
+        self.__intentos_exitosos = 0     # Número de intentos exitosos (status_log = True/1)
+        self.__intentos_fallidos = 0     # Número de intentos fallidos (status_log = False/0)
+        self.__id_usuario = ""           # ID del usuario actual (se establece automáticamente)
+        self.__presicion = 0 # Presición del reconocimiento en porcentaje
+        self.__taza_error = 0 # Error del reconocimiento en porcentaje
+        self.__efectividad = "" # Valor cuantitavivo de la efectividad
 
     # ==========================
     # MÉTODOS PRIVADOS INTERNOS
@@ -61,6 +64,28 @@ class Logs:
         self.__id_usuario = result[0] if result else None
         return self.__id_usuario
 
+    def __cuantificar_efectividad(self):
+        presicion = self.__presicion
+        label_efectividad = ("Extremadamente positiva", "Muy Positiva", "Mayormente positiva",
+                            "Variada", "Mayormente negativa", "Muy negativa", "Extremadamente negativa")
+        
+        if presicion <= 9:
+            return label_efectividad[-1]
+        elif presicion <= 19:
+            return label_efectividad[-2]
+        elif presicion <= 39:
+            return label_efectividad[-3]
+        elif presicion <= 69:
+            return label_efectividad[-4]
+        elif presicion <= 79:
+            return label_efectividad[-5]
+        elif presicion <= 94:
+            return label_efectividad[-6]
+        else:
+            return label_efectividad[-7]
+
+
+
     # ==========================
     # MÉTODOS DE REGISTRO
     # ==========================
@@ -93,11 +118,11 @@ class Logs:
         conn.close()
 
         # Actualiza contadores en memoria
-        self.intentos_totales += 1
+        self.__intentos_totales += 1
         if status_log:
-            self.intentos_exitosos += 1
+            self.__intentos_exitosos += 1
         else:
-            self.intentos_fallidos += 1
+            self.__intentos_fallidos += 1
 
         print(f"Log registrado para '{nombre}' {'Exitoso' if status_log == 1 else 'Fallido'}.")
 
@@ -105,7 +130,7 @@ class Logs:
     # MÉTODOS DE CONSULTA
     # ==========================
     
-    def obtener_intentos(self) -> int:
+    def fetch_data(self) -> int:
         """
         Devuelve el total de intentos registrados en la base de datos.
         
@@ -117,11 +142,36 @@ class Logs:
         """
         conn = self.__conexion()
         cursor = conn.cursor()
+        # Obtención de datos totales
         cursor.execute("SELECT COUNT(*) FROM logs")
-        result = cursor.fetchone()
+        result_logs = cursor.fetchone()
+        self.__intentos_totales = result_logs[0] if result_logs else 0
+
+        # Obtención de datos exitosos
+        cursor.execute("SELECT COUNT(*) FROM logs WHERE status_log = TRUE")
+        result_success = cursor.fetchone()
+        self.__intentos_exitosos = result_success[0] if result_success else 0
+
+        # Obtención de datos fallidos
+        cursor.execute("SELECT COUNT(*) FROM logs WHERE status_log = FALSE")
+        result_fail = cursor.fetchone()
+        self.__intentos_fallidos = result_fail[0] if result_fail else 0
+
+        # Fin de la sesión
         conn.close()
-        self.intentos_totales = result[0] if result else 0
-        return self.intentos_totales
+        self.__presicion = round((self.__intentos_exitosos / self.__intentos_totales) * 100, 2)
+        self.__taza_error = round((self.__intentos_fallidos / self.__intentos_totales) * 100, 2)
+        self.__efectividad = self.__cuantificar_efectividad()
+    
+    def obtener_intentos_totales(self) -> int:
+        """
+        Devuelve el total de intentos.
+        
+        Returns:
+            int: Número de intentos con status_log
+        return self.intentos_exitosos
+        """
+        return self.__intentos_totales
 
     def obtener_intentos_exitosos(self) -> int:
         """
@@ -133,13 +183,7 @@ class Logs:
         Note:
             Actualiza el contador en memoria (self.intentos_exitosos)
         """
-        conn = self.__conexion()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM logs WHERE status_log = TRUE")
-        result = cursor.fetchone()
-        conn.close()
-        self.intentos_exitosos = result[0] if result else 0
-        return self.intentos_exitosos
+        return self.__intentos_exitosos
 
     def obtener_intentos_fallidos(self) -> int:
         """
@@ -151,13 +195,43 @@ class Logs:
         Note:
             Actualiza el contador en memoria (self.intentos_fallidos)
         """
-        conn = self.__conexion()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM logs WHERE status_log = FALSE")
-        result = cursor.fetchone()
-        conn.close()
-        self.intentos_fallidos = result[0] if result else 0
-        return self.intentos_fallidos
+        return self.__intentos_fallidos
+
+    def obtener_presicion(self) -> int:
+        """
+        Devuelve la presición del reconocimiento.
+        
+        Returns:
+            int: Presición del reconocimiento en porcentaje
+            
+        Note:
+            Actualiza el contador en memoria (self.presicion)
+        """
+        return self.__presicion
+
+    def obtener_taza_error(self) -> int:
+        """
+        Devuelve la taza de error del reconocimiento.
+        
+        Returns:
+            int: Taza de error
+            
+        Note:
+            Actualiza el contador en memoria (self.taza_error)
+        """
+        return self.__taza_error
+    
+    def obtener_efectividad(self) -> str:
+        """
+        Devuelve la efectividad del reconocimiento.
+        
+        Returns:
+            str: Efectividad del reconocimiento
+            
+        Note:
+            Actualiza el contador en memoria (self.efectividad)
+        """
+        return self.__efectividad
 
     def obtener_logs_usuario(self, nombre: str):
         """
