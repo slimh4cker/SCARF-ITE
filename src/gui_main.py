@@ -8,7 +8,8 @@ import numpy as np
 import json
 from PIL import Image
 from PIL import ImageTk
-
+from reconocimiento.registro_logs import Logs
+from reconocimiento.registro_logs import Logs
 from db.config import conectar  # tu conexion
 
 
@@ -229,17 +230,18 @@ class SCARFApp(ctk.CTk):
 
         self.after(10, self.actualizar_video)
 
-
     # -----------------------------------------------------------------
-    # PANTALLA ANALYTICS
+    # PANTALLA DE ANALYTICS (con datos desde Logs)
     # -----------------------------------------------------------------
     def mostrar_pantalla_analytics(self):
+        # limpiamos la vista actual
         for widget in self.container.winfo_children():
             widget.destroy()
 
         panel = ctk.CTkFrame(self.container, fg_color=COLOR_FONDO)
         panel.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # Botón de volver
         boton_volver = ctk.CTkButton(
             panel,
             text="← Volver",
@@ -252,6 +254,7 @@ class SCARFApp(ctk.CTk):
         )
         boton_volver.pack(anchor="w", pady=(10, 0))
 
+        # Título
         titulo = ctk.CTkLabel(
             panel,
             text="Panel de Analíticas del Sistema",
@@ -260,31 +263,83 @@ class SCARFApp(ctk.CTk):
         )
         titulo.pack(pady=(10, 20))
 
+        # --- Intentamos obtener datos reales desde Logs ---
+        # Valores por defecto (seguro si falla)
+        total_intentos = 0
+        intentos_exitosos = 0
+        intentos_fallidos = 0
+        presicion = 0.0
+        taza_error = 0.0
+        efectividad = "N/A"
+
+        try:
+            logs = Logs()            # instancia la clase
+            # si la clase requiere una llamada explícita para llenar datos:
+            if hasattr(logs, "fetch_data"):
+                # algunos implementations devuelven True/False o llenan internamente
+                logs.fetch_data()
+
+            # ahora pedimos los números mediante los métodos acordados
+            if hasattr(logs, "obtener_intentos_totales"):
+                total_intentos = logs.obtener_intentos_totales() or 0
+            if hasattr(logs, "obtener_intentos_exitosos"):
+                intentos_exitosos = logs.obtener_intentos_exitosos() or 0
+            if hasattr(logs, "obtener_intentos_fallidos"):
+                intentos_fallidos = logs.obtener_intentos_fallidos() or 0
+            if hasattr(logs, "obtener_presicion"):
+                presicion = logs.obtener_presicion() or 0.0
+            if hasattr(logs, "obtener_taza_error"):
+                taza_error = logs.obtener_taza_error() or 0.0
+            if hasattr(logs, "obtener_efectividad"):
+                efectividad = logs.obtener_efectividad() or "N/A"
+
+        except Exception as e:
+            # Si algo falla, no romper la app. muestro por consola y uso valores por defecto.
+            print("Warning: no se pudieron cargar los logs para Analytics:", e)
+            # (Opcional) puedes descomentar la línea si quieres que el usuario vea un popup:
+            # messagebox.showwarning("Analytics", f"No se pudieron cargar las estadísticas: {e}")
+
+        # --- Métricas principales (dinámicas) ---
         frame_metricas = ctk.CTkFrame(panel, fg_color=COLOR_FONDO)
         frame_metricas.pack(pady=10)
 
-        def crear_card(titulo, valor, color):
+        def crear_card(titulo_texto, valor, color):
             card = ctk.CTkFrame(frame_metricas, fg_color=color, corner_radius=15)
             card.pack(side="left", padx=15, ipadx=10, ipady=10)
-            ctk.CTkLabel(card, text=titulo, text_color="white", font=("Segoe UI", 13, "bold")).pack(pady=(5, 2))
+            ctk.CTkLabel(card, text=titulo_texto, text_color="white", font=("Segoe UI", 13, "bold")).pack(pady=(5, 2))
             ctk.CTkLabel(card, text=str(valor), text_color="white", font=("Segoe UI", 22, "bold")).pack(pady=(2, 5))
 
-        crear_card("Total de Intentos", 120, "#6DA9E4")
-        crear_card("Accesos Exitosos", 105, "#5E8AC7")
-        crear_card("Accesos Fallidos", 15, "#E57373")
+        crear_card("Total de Intentos", total_intentos, "#6DA9E4")
+        crear_card("Accesos Exitosos", intentos_exitosos, "#5E8AC7")
+        crear_card("Accesos Fallidos", intentos_fallidos, "#E57373")
 
+        # Estadísticas derivadas (dinámicas)
         frame_stats = ctk.CTkFrame(panel, fg_color="#E3ECF8", corner_radius=10)
         frame_stats.pack(pady=25, fill="x", padx=40)
 
         ctk.CTkLabel(frame_stats, text="📊 Estadísticas del Sistema", font=("Segoe UI", 14, "bold"), text_color=COLOR_TEXTO).pack(pady=(10, 10))
-        ctk.CTkLabel(frame_stats, text="Tasa de Error:     12.5%", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
-        ctk.CTkLabel(frame_stats, text="Precisión:          87.5%", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
-        ctk.CTkLabel(frame_stats, text="Efectividad Global: Alta", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20, pady=(0, 10))
 
+        # Muestra los porcentajes con 2 decimales
+        try:
+            pres_text = f"Tasa de Error:     {float(taza_error):.2f} %"
+        except Exception:
+            pres_text = f"Tasa de Error:     {taza_error}"
+
+        try:
+            prec_text = f"Precisión:          {float(presicion):.2f} %"
+        except Exception:
+            prec_text = f"Precisión:          {presicion}"
+
+        ctk.CTkLabel(frame_stats, text=pres_text, font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
+        ctk.CTkLabel(frame_stats, text=prec_text, font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20)
+        ctk.CTkLabel(frame_stats, text=f"Efectividad Global: {efectividad}", font=("Segoe UI", 12, "bold"), text_color=COLOR_TEXTO).pack(anchor="w", padx=20, pady=(0, 10))
+
+        # Placeholder para gráfico futuro (se mantiene)
         grafico = ctk.CTkFrame(panel, fg_color="#D0D8E8", corner_radius=10, height=120)
         grafico.pack(fill="x", padx=40, pady=20)
         ctk.CTkLabel(grafico, text="📈 (Aquí irá el gráfico de desempeño del sistema)", font=("Segoe UI", 11, "italic"), text_color="#555").pack(expand=True)
 
+        # Footer
         footer = ctk.CTkLabel(
             panel,
             text="Proyecto SCARF ITE © 2025",
@@ -292,6 +347,7 @@ class SCARFApp(ctk.CTk):
             font=("Segoe UI", 9)
         )
         footer.pack(side="bottom", pady=10)
+
 
 
 # ---------------------------------------------------------------------

@@ -24,6 +24,6 @@ def conectar():
         password=PASSWORD,
         database=DATABASE,
         charset=CHARSET,
-        collation=COLLATION
+        collation=COLLATION,   
 
 )
