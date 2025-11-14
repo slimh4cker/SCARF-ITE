@@ -2,6 +2,14 @@ import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 from registro.registrar import registrar_usuario
+import cv2
+import face_recognition
+import numpy as np
+import json
+from PIL import Image
+from PIL import ImageTk
+
+from db.config import conectar  # tu conexion
 
 
 #ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
@@ -31,11 +39,18 @@ class SCARFApp(ctk.CTk):
         self.resizable(False, False)
         self.configure(fg_color=COLOR_FONDO)
 
+        self.cap = cv2.VideoCapture(0)  # o la camara IP
+        self.usuarios = self.cargar_usuarios()
+
+
+
         # Contenedor principal
         self.container = ctk.CTkFrame(self, fg_color=COLOR_FONDO)
         self.container.pack(fill="both", expand=True)
 
         self.mostrar_pantalla_inicio()
+        self.actualizar_video()   # iniciar el video en el GUI
+
 
     # -----------------------------------------------------------------
     # PANTALLA PRINCIPAL
@@ -83,13 +98,9 @@ class SCARFApp(ctk.CTk):
         espacio_camara = ctk.CTkFrame(panel_contenido, fg_color="#E8EDF2", corner_radius=10, width=400, height=360)
         espacio_camara.pack(side="left", fill="y", padx=(20, 0), pady=10)
 
-        placeholder = ctk.CTkLabel(
-            espacio_camara,
-            text="(Vista de cámara aquí)",
-            text_color="#7B7B7B",
-            font=("Segoe UI", 12, "italic")
-        )
-        placeholder.place(relx=0.5, rely=0.5, anchor="center")
+        self.lbl_video = ctk.CTkLabel(espacio_camara, text="")
+        self.lbl_video.place(relx=0.5, rely=0.5, anchor="center")
+
 
         # Panel derecho con botones (subido un poco)
         panel_derecho = ctk.CTkFrame(panel_contenido, fg_color=COLOR_FONDO)
@@ -153,6 +164,71 @@ class SCARFApp(ctk.CTk):
             font=("Segoe UI", 9)
         )
         footer.pack(side="bottom", pady=10)
+
+
+#FUNCION PARA CARGAR LOS USUARIOS REGISTRADOS EN LA BASE DE DATOS
+    def cargar_usuarios(self):
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, embedding FROM usuarios")
+        data = []
+        for id, nombre, emb_json in cursor.fetchall():
+            emb = np.array(json.loads(emb_json))
+            data.append((id, nombre, emb))
+        conn.close()
+        return data
+
+
+    #ESTA FUNCION ES LA MAS IMPORTANTE, YA QUE ES LA QUE SE ENCARGA DE HACER EL RECONOCIMIENTO Y DAR ACCESO O NEGARLO
+    def actualizar_video(self):
+        THRESHOLD = 0.45
+        MUESTRAS_VIVO = 5
+
+        ret, frame = self.cap.read()
+        if ret:
+
+            small = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
+            rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+
+            faces = face_recognition.face_locations(rgb)
+            encodings = face_recognition.face_encodings(rgb, faces)
+
+            for (top, right, bottom, left), enc in zip(faces, encodings):
+
+                name = "DESCONOCIDO"
+                color = (0, 0, 255)
+                label = "ACCESO DENEGADO"
+
+                # comparar con usuarios
+                if len(self.usuarios) > 0:
+                    muestras = [enc for _ in range(MUESTRAS_VIVO)]
+                    distancias = []
+
+                    for u in self.usuarios:
+                        d_min = min([np.linalg.norm(u[2] - m) for m in muestras])
+                        distancias.append(d_min)
+
+                    idx = np.argmin(distancias)
+                    if distancias[idx] < THRESHOLD:
+                        name = self.usuarios[idx][1]
+                        color = (0, 255, 0)
+                        label = f"ACCESO PERMITIDO: {name}"
+
+                # regresar escala al frame original
+                top *= 2; right *= 2; bottom *= 2; left *= 2
+                cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+                cv2.putText(frame, label, (left, top - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+            # convertir para mostrar en tkinter
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = ImageTk.PhotoImage(Image.fromarray(frame_rgb))
+
+            self.lbl_video.configure(image=img)
+            self.lbl_video.image = img
+
+        self.after(10, self.actualizar_video)
+
 
     # -----------------------------------------------------------------
     # PANTALLA ANALYTICS
