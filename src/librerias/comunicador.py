@@ -53,12 +53,21 @@ def enviar_comando_arduino(puerto, comando, baud_rate=9600):
 
 if __name__ == "__main__":
     # Uso: python3 comunicador.py "Mensaje a enviar"
-    texto = "abrir_puerta"
+    abrir = "abrir_puerta"
+    denegar = "acceso_denegado"
 
     try:
         puerto = '/dev/ttyUSB0'  # o poner '/dev/ttyACM0' explícito si se conoce
-        respuesta = enviar_comando_arduino(puerto, texto, baud_rate=9600)
-        print('Se ha enviado el comando al Arduino.')
+        print("Puerto utilizado:", puerto)
+        
+
+        print(f"Enviando comando {denegar}  al Arduino...")
+        respuesta2 = enviar_comando_arduino(puerto, denegar, baud_rate=9600)
+
+        time.sleep(3)
+
+        print(f"Enviando comando {abrir}  al Arduino...")
+        respuesta = enviar_comando_arduino(puerto, abrir, baud_rate=9600)
         
     except Exception as e:
         print("Error:", e)
