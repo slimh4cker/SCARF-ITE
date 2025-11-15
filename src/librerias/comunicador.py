@@ -4,13 +4,17 @@ import serial
 
 #!/usr/bin/env python3
 # librerias/comunicador.py
-# Envia una cadena de texto al Arduino desde una Raspberry Pi usando pyserial
+# En este archivo se definen funciones para comunicarse con un Arduino a través de un puerto serial.
 
 import serial.tools.list_ports
 
 
 def encontrar_puerto_arduino():
-    """Busca un puerto serie que parezca un Arduino (ACM, USB o con 'Arduino' en la descripción)."""
+    """
+    Busca un puerto serie que parezca un Arduino (ACM, USB o con 'Arduino' en la descripción).
+    No recibe parámetros.
+    Devuelve el nombre del puerto (str) o None si no se encuentra ninguno.
+    """
     ports = list(serial.tools.list_ports.comports())
     for p in ports:
         desc = (p.description or "").lower()
