@@ -31,6 +31,8 @@ COLOR_BOTON = "#3A6D8C"
 COLOR_BOTON_HOVER = "#2E4F6E"
 COLOR_TEXTO = "#1A1A1A"
 
+url = os.getenv("url") #URL para poder conectarse a la camara de andres  
+
 ruta_intrusos = os.getenv("INTRUSOS_PATH")
 
 if not ruta_intrusos:
@@ -87,7 +89,8 @@ class SCARFApp(ctk.CTk):
         # intenta reabrir la camara si es necesario
         if getattr(self, "cap", None) is None or not getattr(self.cap, "isOpened", lambda: False)():
             try:
-                self.cap = cv2.VideoCapture(0)
+                self.cap = cv2.VideoCapture(url) #Camara de andres
+                #self.cap = cv2.VideoCapture(0)
             except Exception as e:
                 print("Error al abrir la camara:", e)
                 self.cap = None
@@ -214,7 +217,8 @@ class SCARFApp(ctk.CTk):
         # asegurarnos que la camara este abierta
         if getattr(self, "cap", None) is None or not getattr(self.cap, "isOpened", lambda: False)():
             try:
-                self.cap = cv2.VideoCapture(0)
+                self.cap = cv2.VideoCapture(url) #camara de andres
+                #self.cap = cv2.VideoCapture(0)
             except Exception as e:
                 print("Error reabriendo camara:", e)
                 self.cap = None

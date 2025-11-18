@@ -6,10 +6,10 @@ from registro.reg import registrar_usuario
 
 
 #ESTA SE UTILIZA PARA HACER PRUEBAS CON LA CAMARA DE LA LAPTOP
-from reconocimiento.reconocimiento import reconocer
+#from reconocimiento.reconocimiento import reconocer
 
 #ESTA SE UTILIZA PARA LA CAMARA EXTERNA (LA DE ANDRES)
-#from reconocimiento.rec import reconocer
+from reconocimiento.rec import reconocer
 
 def main():
     while True:

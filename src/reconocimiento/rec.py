@@ -27,7 +27,7 @@ def reconocer():
     usuarios = cargar_usuarios()
     print(f"[ℹ] Se cargaron {len(usuarios)} usuarios desde la base de datos.")
 
-    url = "rtsp://mffe:mn333w@140.10.2.9:554/12"
+    url = "rtsp://mffe:mn333w@192.168.1.77:554/12"
     cap = cv2.VideoCapture(url)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
