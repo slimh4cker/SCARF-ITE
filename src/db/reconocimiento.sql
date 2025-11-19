@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   `embedding` longtext NOT NULL CHECK (json_valid(`embedding`)),
   `fecha_registro` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-)
+);
 
 -- Volcando datos para la tabla reconocimiento.usuarios: ~2 rows (aproximadamente)
 INSERT IGNORE INTO `usuarios` (`id`, `nombre`, `embedding`, `fecha_registro`) VALUES
