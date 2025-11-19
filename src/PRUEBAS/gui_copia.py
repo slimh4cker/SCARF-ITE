@@ -77,6 +77,10 @@ class SCARFApp(ctk.CTk):
         self.mostrar_pantalla_inicio() 
         #self.start_camera() 
 
+        self.ultimo_reconocido = None
+        self.tiempo_reconocido = 0
+        self.MEMORIA_SEGUNDOS = 3  # mantener acceso permitido verde por 3 segundos
+
 
     # -----------------------------------------------------------------
     # PANTALLA PRINCIPAL
