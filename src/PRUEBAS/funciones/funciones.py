@@ -10,6 +10,8 @@ from PIL import Image, ImageTk
 import customtkinter as ctk
 from db.config import conectar  # tu conexion
 import json
+import threading, asyncio
+import librerias.comunicador
 
 load_dotenv()
 
@@ -227,6 +229,22 @@ def actualizar_video(self):
 
             # dibujar texto verde
             cv2.putText(frame, texto, (pos_x, pos_y), font, escala, (0, 255, 0), grosor)
+            
+            # enviar comando al arduino para abrir puerta
+            if reconocido:
+                puerto_arduino = os.getenv("puerto_arduino")
+                if puerto_arduino:
+
+                    def _bg_send():
+                        try:
+                            asyncio.run(librerias.comunicador.enviar_comando_arduino(puerto_arduino, "abrir_puerta", 9600))
+                        except Exception as e:
+                            print("Error enviando comando al arduino:", e)
+
+                    threading.Thread(target=_bg_send, daemon=True).start()
+
+                reconocido = False  # evitar múltiples envíos
+            
 
         else:
             # ya pasaron los 3 segundos, borrar
