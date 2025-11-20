@@ -40,10 +40,10 @@ def enviar_comando_arduino(puerto, comando, baud_rate=9600):
 
         # Enviar comando seguido de salto de línea
         arduino.write((comando + '\n').encode('utf-8'))
-        print(f"✅ Comando enviado: {comando}")
+        print(f" Comando enviado: {comando}")
 
     except serial.SerialException:
-        print("❌ Error: No se pudo abrir el puerto serial. Verifica la conexión y permisos.")
+        print(" Error: No se pudo abrir el puerto serial. Verifica la conexión y permisos.")
     finally:
         # Cerrar el puerto siempre
         if 'arduino' in locals() and arduino.is_open:

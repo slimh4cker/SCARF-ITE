@@ -36,10 +36,10 @@ async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
         await asyncio.sleep(2)
         # Enviar comando en un thread (operación de E/S)
         await asyncio.to_thread(arduino.write, (comando + '\n').encode('utf-8'))
-        print(f"✅ Comando enviado: {comando}")
+        print(f" Comando enviado: {comando}")
 
     except Exception as e:
-        print("❌ Error: No se pudo abrir el puerto serial. Verifica la conexión y permisos.", e)
+        print(" Error: No se pudo abrir el puerto serial. Verifica la conexión y permisos.", e)
     finally:
         if 'arduino' in locals() and getattr(arduino, 'is_open', False):
             await asyncio.to_thread(arduino.close)

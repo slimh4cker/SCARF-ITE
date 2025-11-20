@@ -3,9 +3,11 @@
 from tkinter import messagebox
 import customtkinter as ctk
 
-#LIBRERIAS DE FUNCIONES
+# LIBRERIAS DE FUNCIONES
 from registro.registrar import registrar_usuario
 from reconocimiento.registro_logs import Logs
+
+import threading # PARA ANALIZAR IMAGENES SIN CONGELAR LA GUI
 
 # ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
 from reconocimiento.reconocimiento import reconocer
@@ -128,7 +130,7 @@ class SCARFApp(ctk.CTk):
         boton_registrar = ctk.CTkButton(panel_derecho, text="Registrar Usuario", fg_color=COLOR_BOTON,
                                         hover_color=COLOR_BOTON_HOVER, corner_radius=20, width=220, height=50,
                                         font=("Segoe UI", 13, "bold"), text_color="white",
-                                        command=lambda: messagebox.showinfo("Registro", "Funcionalidad aun no implementada."))
+                                        command=self.registrar_usuario_window)
         boton_registrar.pack(pady=10)
 
         boton_analytics = ctk.CTkButton(panel_derecho, text="Ver Analytics", fg_color=COLOR_BOTON,
@@ -243,6 +245,97 @@ class SCARFApp(ctk.CTk):
 
         footer = ctk.CTkLabel(panel, text="Proyecto SCARF ITE © 2025", text_color="#7B7B7B", font=("Segoe UI", 9))
         footer.pack(side="bottom", pady=10)
+    
+    def registrar_usuario_window(self):
+        self.stop_camera()
+
+        # Crear ventana modal más pequeña
+        ventana_registro = ctk.CTkToplevel(self)
+        ventana_registro.title("Procesando Registro")
+        ventana_registro.geometry("400x200")  # Ventana más compacta
+        ventana_registro.resizable(False, False)
+        
+        # Centrar la ventana en la pantalla
+        ventana_registro.transient(self)
+        ventana_registro.grab_set()
+        
+        # --- UI DE LA VENTANA MODAL COMPACTA ---
+        titulo = ctk.CTkLabel(ventana_registro, text="Registrando Usuarios", 
+                            font=("Segoe UI", 16, "bold"))
+        titulo.pack(pady=(15, 10))
+
+        # Frame para el estado actual (más compacto)
+        frame_estado = ctk.CTkFrame(ventana_registro, fg_color="#F0F0F0", corner_radius=8)
+        frame_estado.pack(fill="x", padx=20, pady=5)
+        
+        # Label para el estado actual (en lugar de Textbox grande)
+        lbl_estado_titulo = ctk.CTkLabel(frame_estado, text="Estado actual:", 
+                                    font=("Segoe UI", 11, "bold"), text_color="#555555")
+        lbl_estado_titulo.pack(anchor="w", padx=10, pady=(8, 0))
+        
+        self.lbl_estado_actual = ctk.CTkLabel(frame_estado, text="Iniciando sistema de registro...", 
+                                            font=("Segoe UI", 11), text_color="#333333",
+                                            wraplength=350, height=30)
+        self.lbl_estado_actual.pack(fill="x", padx=10, pady=(0, 8))
+
+        # Barra de progreso más compacta
+        lbl_progreso = ctk.CTkLabel(ventana_registro, text="Progreso:", 
+                                font=("Segoe UI", 11))
+        lbl_progreso.pack(pady=(10, 5))
+        
+        barra_progreso = ctk.CTkProgressBar(ventana_registro, width=350, height=12)
+        barra_progreso.pack(pady=5)
+        barra_progreso.set(0)
+
+        # Botón cerrar
+        btn_cerrar = ctk.CTkButton(ventana_registro, text="Cerrar", state="disabled", 
+                                command=ventana_registro.destroy, fg_color="#B03A3A",
+                                width=100, height=32)
+        btn_cerrar.pack(pady=15)
+
+        # --- FUNCIONES DE CALLBACK ---
+        def callback_texto(mensaje):
+            # Actualizar solo el texto del label con el mensaje actual
+            def _update():
+                self.lbl_estado_actual.configure(text=mensaje)
+            self.after(0, _update)
+
+        def callback_progreso(valor_0_a_1):
+            self.after(0, lambda: barra_progreso.set(valor_0_a_1))
+
+        # --- EJECUCIÓN EN HILO SECUNDARIO ---
+        def proceso_en_background():
+            try:
+                # Llamamos a la función de registro con los callbacks
+                registrar_usuario(log_callback=callback_texto, progress_callback=callback_progreso)
+                callback_texto(" Proceso completado exitosamente")
+            except Exception as e:
+                callback_texto(f" Error: {str(e)}")
+                import traceback
+                print(traceback.format_exc())  # Para debugging en consola
+            finally:
+                # Habilitar botón de cerrar al terminar
+                self.after(0, lambda: btn_cerrar.configure(state="normal", fg_color=COLOR_BOTON))
+                # Recargar usuarios en memoria principal
+                self.usuarios = self.cargar_usuarios()
+
+        # Iniciamos el hilo
+        hilo = threading.Thread(target=proceso_en_background)
+        hilo.daemon = True
+        hilo.start()
+        
+        # Centrar la ventana
+        self.centrar_ventana(ventana_registro)
+
+    def centrar_ventana(self, ventana):
+        """Centra una ventana respecto a la ventana principal"""
+        self.update_idletasks()
+        ancho_ventana = ventana.winfo_width()
+        alto_ventana = ventana.winfo_height()
+        x = (self.winfo_width() // 2) - (ancho_ventana // 2) + self.winfo_x()
+        y = (self.winfo_height() // 2) - (alto_ventana // 2) + self.winfo_y()
+        ventana.geometry(f"+{x}+{y}")
+
 
 SCARFApp.start_camera = start_camera
 SCARFApp.stop_camera = stop_camera
