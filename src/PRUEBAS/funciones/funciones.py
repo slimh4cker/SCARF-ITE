@@ -59,7 +59,7 @@ def start_camera(self):
     try:
         if getattr(self, "cap", None) is None or not getattr(self.cap, "isOpened", lambda: False)():
             # intenta abrir la url (o 0 si quieres la cam local)
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(url)
     except Exception as e:
         print("Error al abrir la camara:", e)
         self.cap = None
@@ -132,7 +132,7 @@ def actualizar_video(self):
 
     # abrir camara si no está lista
     if self.cap is None or not self.cap.isOpened():
-        self.cap = cv2.VideoCaptur(0)
+        self.cap = cv2.VideoCaptur(url)
         self.after(200, self.actualizar_video)
         return
 
