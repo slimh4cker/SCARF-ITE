@@ -132,7 +132,7 @@ def actualizar_video(self):
 
     # abrir camara si no está lista
     if self.cap is None or not self.cap.isOpened():
-        self.cap = cv2.VideoCaptur(url)
+        self.cap = cv2.VideoCapture(url)
         self.after(200, self.actualizar_video)
         return
 
