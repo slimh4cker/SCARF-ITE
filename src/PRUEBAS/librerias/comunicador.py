@@ -28,7 +28,19 @@ def encontrar_puerto_arduino():
 async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
     """
     Envía un comando por el puerto serial al Arduino (versión asíncrona).
+    Si ya hay otro comando en proceso, no envía uno nuevo.
+    Devuelve True si se envió el comando, False si fue ignorado o falló.
     """
+    # lock global y creación perezosa (dentro del event loop)
+    global _arduino_send_lock
+    if "_arduino_send_lock" not in globals() or _arduino_send_lock is None:
+        _arduino_send_lock = asyncio.Lock()
+
+    # Si ya está en uso, no enviamos otro comando
+    if _arduino_send_lock.locked():
+        return False
+
+    await _arduino_send_lock.acquire()
     try:
         # Abrir el puerto en un thread para no bloquear el event loop
         arduino = await asyncio.to_thread(serial.Serial, puerto, baud_rate, timeout=1)
@@ -41,9 +53,13 @@ async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
     except Exception as e:
         print(" Error: No se pudo abrir el puerto serial. Verifica la conexión y permisos.", e)
     finally:
-        if 'arduino' in locals() and getattr(arduino, 'is_open', False):
-            await asyncio.to_thread(arduino.close)
-            print("🔌 Conexión cerrada.")
+        # Asegurar cierre y liberación del lock
+        try:
+            if 'arduino' in locals() and getattr(arduino, 'is_open', False):
+                await asyncio.to_thread(arduino.close)
+                print("🔌 Conexión cerrada.")
+        finally:
+            _arduino_send_lock.release()
 
 
 if __name__ == "__main__":
@@ -54,17 +70,17 @@ if __name__ == "__main__":
     print(encontrar_puerto_arduino())
 
     try:
-        puerto = '/dev/ttyUSB0'  # o poner '/dev/ttyACM0' explícito si se conoce
+        puerto = '/dev/ttyUSB0'  # o '/dev/ttyACM0' si corresponde
         print("Puerto utilizado:", puerto)
-        
 
-        print(f"Enviando comando {denegar}  al Arduino...")
-        respuesta2 = enviar_comando_arduino(puerto, denegar, baud_rate=9600)
+        async def main():
+            #print(f"Enviando comando {denegar} al Arduino...")
+            #await enviar_comando_arduino(puerto, denegar, baud_rate=9600)
+            #await asyncio.sleep(3)
+            print(f"Enviando comando {abrir} al Arduino...")
+            await enviar_comando_arduino(puerto, abrir, baud_rate=9600)
 
-        time.sleep(3)
+        asyncio.run(main())
 
-        print(f"Enviando comando {abrir}  al Arduino...")
-        respuesta = enviar_comando_arduino(puerto, abrir, baud_rate=9600)
-        
     except Exception as e:
         print("Error:", e)
