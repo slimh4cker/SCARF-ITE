@@ -74,9 +74,9 @@ if __name__ == "__main__":
         print("Puerto utilizado:", puerto)
 
         async def main():
-            #print(f"Enviando comando {denegar} al Arduino...")
-            #await enviar_comando_arduino(puerto, denegar, baud_rate=9600)
-            #await asyncio.sleep(3)
+            print(f"Enviando comando {denegar} al Arduino...")
+            await enviar_comando_arduino(puerto, denegar, baud_rate=9600)
+            await asyncio.sleep(3)
             print(f"Enviando comando {abrir} al Arduino...")
             await enviar_comando_arduino(puerto, abrir, baud_rate=9600)
 
