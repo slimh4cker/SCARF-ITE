@@ -12,8 +12,13 @@ from db.config import conectar  # tu conexion
 import json
 import threading, asyncio
 import librerias.comunicador
+from reconocimiento.registro_logs import Logs
+import threading
+
+
 
 load_dotenv()
+logs = Logs()
 
 url = os.getenv("url")  # URL para poder conectarse a la camara de andres o 0 para local
 
@@ -30,10 +35,11 @@ ruta_intrusos = os.path.normpath(ruta_intrusos)
 def guardar_foto(self, frame):
     carpeta = ruta_intrusos
     ahora = time.time()
-    if ahora - getattr(self, "ultimo_guardado", 0) < 10:
+    if ahora - getattr(self, "ultimo_guardado", 0) < int(os.getenv("COOLDOWN_DETECTION")):
         return
     self.ultimo_guardado = ahora
     nombre = time.strftime("intruso_%Y%m%d_%H%M%S.jpg")
+    logs.ejecutar(False)
     ruta = os.path.join(carpeta, nombre)
     try:
         cv2.imwrite(ruta, frame)
@@ -186,6 +192,7 @@ def actualizar_video(self):
 
                     if distancias[idx] < 0.45:
                         name = self.usuarios[idx][1]
+                        id_usuario = self.usuarios[idx][0]
                         color = (0, 255, 0)
                         label = f"ACCESO PERMITIDO: {name}"
 
@@ -193,6 +200,11 @@ def actualizar_video(self):
                         self.ultimo_reconocido = name
                         self.tiempo_reconocido = time.time()
                         reconocido = True
+                        logs.ejecutar(reconocido, id_usuario)
+                        
+                        print("Llamado correcto")
+
+
                     else:
                         # acceso denegado: guardar foto
                         guardar_foto(self, frame)

@@ -67,7 +67,8 @@ class SCARFApp(ctk.CTk):
 
 
         self.usuarios = self.cargar_usuarios()   # primero carga usuarios
-        self.ultimo_guardado = 0                 # inicializa contador
+        self.ultimo_guardado = 0
+        self.id_usuario = 0                 # inicializa contador
         # bandera control del loop de video
         self.mostrar_video = False
 

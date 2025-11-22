@@ -1,4 +1,10 @@
 from db.config import conectar
+import time
+import threading
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class Logs:
     """
@@ -27,6 +33,11 @@ class Logs:
         self.__presicion = 0 # Presición del reconocimiento en porcentaje
         self.__taza_error = 0 # Error del reconocimiento en porcentaje
         self.__efectividad = "" # Valor cuantitavivo de la efectividad
+
+        # Cooldown para no saturar la base de datos con logs repetidos
+        self.log_cooldown_seconds = int(os.getenv("COOLDOWN_DETECTION"))  # No registrar al mismo usuario más de una vez cada 10 segundos
+        self.last_log_time_by_user = {} # Diccionario para guardar {id_usuario: timestamp}
+        self.log_lock = threading.Lock() # Para manejar concurrencia al acceder al diccionario
 
     # ==========================
     # MÉTODOS PRIVADOS INTERNOS
@@ -90,7 +101,7 @@ class Logs:
     # MÉTODOS DE REGISTRO
     # ==========================
 
-    def registrar_log(self, nombre: str, status_log: bool) -> None:
+    def __registrar_log(self, id_usuario: int, status_log: bool) -> None:
         """
         Registra un intento de acceso en la tabla logs.
         
@@ -105,11 +116,6 @@ class Logs:
             - Muestra un mensaje en consola con el resultado
             - Si el usuario no existe, no registra el log
         """
-        id_usuario = self.__obtener_id_usuario(nombre.lower())
-        if id_usuario is None:
-            print(f"Usuario '{nombre}' no encontrado en la base de datos.")
-            return
-
         conn = self.__conexion()
         cursor = conn.cursor()
         sql = "INSERT INTO logs (id_usuario, status_log) VALUES (%s, %s)"
@@ -123,8 +129,32 @@ class Logs:
             self.__intentos_exitosos += 1
         else:
             self.__intentos_fallidos += 1
+        
+    
+    def ejecutar(self, status_log: bool, id_usuario=None) -> None:
+        """
+        Ejecuta __registrar_log en un hilo separado para no bloquear la aplicación.
+        Incluye un cooldown para evitar registros duplicados en un corto período de tiempo.
+        """
+        # Si es un intento fallido (intruso), el id_usuario es None.
+        # Usamos una clave especial para los intrusos para aplicarles cooldown también.
+        key = id_usuario if id_usuario is not None else "intruso"
 
-        print(f"Log registrado para '{nombre}' {'Exitoso' if status_log == 1 else 'Fallido'}.")
+        with self.log_lock:
+            current_time = time.time()
+            last_log_time = self.last_log_time_by_user.get(key, 0)
+
+            # Comprobar si ha pasado suficiente tiempo desde el último log para esta clave
+            if current_time - last_log_time < self.log_cooldown_seconds:
+                # No ha pasado suficiente tiempo, no hacer nada.
+                return
+            
+            # Ha pasado suficiente tiempo, actualizar el tiempo del último log.
+            self.last_log_time_by_user[key] = current_time
+
+        # Iniciar el registro en un hilo separado
+        thread = threading.Thread(target=self.__registrar_log, args=(id_usuario, status_log), daemon=True)
+        thread.start()
 
     # ==========================
     # MÉTODOS DE CONSULTA
