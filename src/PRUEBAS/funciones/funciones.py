@@ -46,6 +46,11 @@ def guardar_foto(self, frame):
         print("Foto de intruso guardada en:", ruta)
     except Exception as e:
         print("Error guardando foto:", e)
+    
+    try:
+        librerias.comunicador.enviar_comando_arduino(os.getenv("puerto_arduino"), "alerta_intruso", 9600)
+    except Exception as e:
+        print("Error enviando alerta de intruso al arduino:", e)
 
 
 # ======================== CAMARA HELPERS ========================
