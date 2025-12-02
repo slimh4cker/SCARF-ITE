@@ -13,7 +13,6 @@ USER = os.getenv('DB_USER')
 PASSWORD = os.getenv('DB_PASS')
 DATABASE = os.getenv('DB_NAME')
 CHARSET = os.getenv('CHARSET')
-COLLATION = os.getenv('COLLATION')
 
 
 
@@ -23,7 +22,5 @@ def conectar():
         user=USER,
         password=PASSWORD,
         database=DATABASE,
-        charset=CHARSET,
-        collation=COLLATION,   
-
+        charset=CHARSET
 )
