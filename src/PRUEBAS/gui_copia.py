@@ -10,7 +10,6 @@ from reconocimiento.registro_logs import Logs
 import threading # PARA ANALIZAR IMAGENES SIN CONGELAR LA GUI
 
 # ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
-from reconocimiento.reconocimiento import reconocer
 
 from funciones.funciones import (
     start_camera,
