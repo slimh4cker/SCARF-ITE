@@ -8,11 +8,14 @@ de ese modo envia el comando para ejecutar el arduino
 '''
 
 import socket
+import os
+from dotenv import load_dotenv
+
 
 def enviar_comando_laptop(comando):
-    # Dirección IP de la Raspberry Pi
-    ip_raspberry_pi = '10.4.10.9'  # IP de tu Raspberry Pi
-    puerto = 5000  # Puerto donde escucha el servidor en Raspberry Pi
+    load_dotenv()
+    ip_raspberry_pi = os.getenv('IP_RASPBERRY')
+    puerto = int(os.getenv('PUERTO_RASPBERRY'))
 
     try:
         # Crear socket

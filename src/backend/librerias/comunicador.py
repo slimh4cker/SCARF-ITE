@@ -2,6 +2,7 @@ import sys
 import time
 import serial
 import asyncio
+from backend.client_socket import enviar_comando_laptop
 
 #!/usr/bin/env python3
 # librerias/comunicador.py
@@ -25,13 +26,16 @@ def encontrar_puerto_arduino():
     # Si no se detecta, devuelve None
     return None
 
-async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
+async def enviar_comando_arduino(comando):
     """
     Envía un comando por el puerto serial al Arduino (versión asíncrona).
     Si ya hay otro comando en proceso, no envía uno nuevo.
     Devuelve True si se envió el comando, False si fue ignorado o falló.
     """
-    # lock global y creación perezosa (dentro del event loop)
+
+    enviar_comando_laptop(comando)
+
+    """ # lock global y creación perezosa (dentro del event loop)
     global _arduino_send_lock
     if "_arduino_send_lock" not in globals() or _arduino_send_lock is None:
         _arduino_send_lock = asyncio.Lock()
@@ -39,6 +43,7 @@ async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
     # Si ya está en uso, no enviamos otro comando
     if _arduino_send_lock.locked():
         return False
+    
 
     await _arduino_send_lock.acquire()
     try:
@@ -60,7 +65,7 @@ async def enviar_comando_arduino(puerto, comando, baud_rate=9600):
                 print("🔌 Conexión cerrada.")
         finally:
             _arduino_send_lock.release()
-
+ """
 
 if __name__ == "__main__":
     # Uso: python3 comunicador.py "Mensaje a enviar"

@@ -5,7 +5,7 @@ import serial.tools.list_ports
 
 # Función para encontrar el puerto del Arduino
 def encontrar_puerto_arduino():
-    ports = list(serial.tools.list_ports.comports())
+    ports = list(serial.tools.list_ports.comports())    
     for p in ports:
         desc = (p.description or "").lower()
         device = (p.device or "").lower()
