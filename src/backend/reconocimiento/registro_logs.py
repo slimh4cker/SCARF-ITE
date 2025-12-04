@@ -1,4 +1,4 @@
-from db.config import conectar
+from backend.db.config import conectar
 import time
 import threading
 from dotenv import load_dotenv

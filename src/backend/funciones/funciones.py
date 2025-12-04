@@ -8,11 +8,11 @@ import face_recognition
 import numpy as np
 from PIL import Image, ImageTk
 import customtkinter as ctk
-from db.config import conectar  # tu conexion
+from backend.db.config import conectar  # tu conexion
 import json
 import threading, asyncio
-import librerias.comunicador
-from reconocimiento.registro_logs import Logs
+import backend.librerias.comunicador
+from backend.reconocimiento.registro_logs import Logs
 import threading
 
 

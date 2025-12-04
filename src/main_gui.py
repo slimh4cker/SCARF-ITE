@@ -4,14 +4,14 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 # LIBRERIAS DE FUNCIONES
-from registro.registrar import registrar_usuario
-from reconocimiento.registro_logs import Logs
+from backend.registro.registrar import registrar_usuario
+from backend.reconocimiento.registro_logs import Logs
 
 import threading # PARA ANALIZAR IMAGENES SIN CONGELAR LA GUI
 
 # ESTA ES LA QUE UTILIZA LA CAMARA DE LA COMPUTADORA (PARA PRUEBAS)
 
-from funciones.funciones import (
+from backend.funciones.funciones import (
     start_camera,
     stop_camera,
     on_close,

@@ -4,7 +4,7 @@ import face_recognition
 import numpy as np
 import json
 import os
-from db.config import conectar
+from backend.db.config import conectar
 from dotenv import load_dotenv
 
 load_dotenv()
