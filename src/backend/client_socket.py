@@ -8,6 +8,7 @@ de ese modo envia el comando para ejecutar el arduino
 '''
 
 import socket
+import threading
 import os
 from dotenv import load_dotenv
 
@@ -18,12 +19,22 @@ def enviar_comando_laptop(comando):
     puerto = int(os.getenv('PUERTO_RASPBERRY'))
 
     try:
-        # Crear socket
-        cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        cliente_socket.connect((ip_raspberry_pi, puerto))
-        cliente_socket.send(comando.encode('utf-8'))
-        cliente_socket.close()
-        print(f"Comando {comando} enviado a la Raspberry Pi.")
+        # Crear socket en un hilo separado para no bloquear la interfaz
+        def ejecutar_comando():
+            try:
+                cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                cliente_socket.connect((ip_raspberry_pi, puerto))
+                cliente_socket.send(comando.encode('utf-8'))
+                cliente_socket.close()
+                print(f"Comando {comando} enviado a la Raspberry Pi.")
+            except Exception as e:
+                print("Error al enviar comando:", e)
+
+        # Ejecutar la función en un hilo separado
+        hilo_comando = threading.Thread(target=ejecutar_comando)
+        hilo_comando.daemon = True
+        hilo_comando.start()
+
     except Exception as e:
         print("Error al enviar comando:", e)
 

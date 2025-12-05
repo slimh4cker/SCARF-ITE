@@ -2,6 +2,7 @@ import socket
 import asyncio
 import serial
 import serial.tools.list_ports
+import threading
 
 # Función para encontrar el puerto del Arduino
 def encontrar_puerto_arduino():
@@ -76,7 +77,11 @@ def servidor_socket():
     while True:
         cliente_socket, _ = servidor_socket.accept()
         print("Cliente conectado.")
-        manejar_conexion(cliente_socket, puerto_arduino)
+
+        # Ejecutar el manejo de la conexión en un hilo
+        hilo_conexion = threading.Thread(target=manejar_conexion, args=(cliente_socket, puerto_arduino))
+        hilo_conexion.daemon = True
+        hilo_conexion.start()
 
 if __name__ == "__main__":
     servidor_socket()
