@@ -20,7 +20,7 @@ import threading
 load_dotenv()
 logs = Logs()
 
-url = os.getenv("url")  # URL para poder conectarse a la camara de andres o 0 para local
+url = 0 if os.getenv("url") == "0" else os.getenv("url")  # URL para poder conectarse a la camara de andres o 0 para local
 
 ruta_intrusos = os.getenv("INTRUSOS_PATH")
 if not ruta_intrusos:
@@ -48,7 +48,13 @@ def guardar_foto(self, frame):
         print("Error guardando foto:", e)
     
     try:
-        asyncio.run(backend.librerias.comunicador.enviar_comando_arduino("alerta_intruso"))
+        def _ad_send():
+            try:
+                asyncio.run(backend.librerias.comunicador.enviar_comando_arduino("acceso_denegado"))
+            except Exception as e:
+                print("Error enviando comando al arduino:", e)
+
+        threading.Thread(target=_ad_send, daemon=True).start()
     except Exception as e:
         print("Error enviando alerta de intruso al arduino:", e)
 
@@ -249,18 +255,15 @@ def actualizar_video(self):
             
             # enviar comando al arduino para abrir puerta
             if reconocido:
-                puerto_arduino = os.getenv("puerto_arduino")
-                if puerto_arduino:
+                def _bg_send():
+                    try:
+                        asyncio.run(backend.librerias.comunicador.enviar_comando_arduino("abrir_puerta"))
+                    except Exception as e:
+                        print("Error enviando comando al arduino:", e)
 
-                    def _bg_send():
-                        try:
-                            asyncio.run(backend.librerias.comunicador.enviar_comando_arduino("abrir_puerta"))
-                        except Exception as e:
-                            print("Error enviando comando al arduino:", e)
+                threading.Thread(target=_bg_send, daemon=True).start()
 
-                    threading.Thread(target=_bg_send, daemon=True).start()
-
-                reconocido = False  # evitar múltiples envíos
+            reconocido = False  # evitar múltiples envíos
             
 
         else:
