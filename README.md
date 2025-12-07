@@ -42,21 +42,21 @@ cd /opt
 git clone https://github.com/slimh4cker/SCARF-ITE.git
 cd SCARF-ITE
 
-# 2️⃣ Crear entorno virtual
+### 2️⃣ Crear entorno virtual
 python -m venv .venv
 source .venv/bin/activate   (Windows: .venv\Scripts\activate)
 pyenv activate venv         (Raspberry Pi)
 
-# 3️⃣ Instalar dependencias
+### 3️⃣ Instalar dependencias
 cd src/backend/librerias
 pip install -r requirements.txt
 
-# 4️⃣ Configurar variables de entorno
+### 4️⃣ Configurar variables de entorno
 SCARF-ITE/src/.env
 
-# 5️⃣ Iniciar el servidor socket (en Raspberry Pi)
+### 5️⃣ Iniciar el servidor socket (en Raspberry Pi)
 cd SCARF-ITE
 python3 src/backend/server_socket.py
 
-# 6️⃣ Iniciar el programa
+### 6️⃣ Iniciar el programa
 python src/main_gui.py
